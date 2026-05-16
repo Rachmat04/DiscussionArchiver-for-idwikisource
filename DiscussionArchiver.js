@@ -36,10 +36,42 @@
 
   // ── CSS ──────────────────────────────────────────────────────────────
   mw.util.addCSS(`
+    /* ── Variabel warna: light mode (default) ── */
+    .da-overlay, .da-dialog, .da-dialog * {
+      --da-bg:          #ffffff;
+      --da-bg-subtle:   #f8f9fa;
+      --da-bg-hover:    #f0f2f4;
+      --da-border:      #a2a9b1;
+      --da-border-subtle: #eaecf0;
+      --da-text:        #202122;
+      --da-text-subtle: #54595d;
+      --da-text-muted:  #72777d;
+      --da-link:        #3366cc;
+      --da-badge-bg:    #fee7e6;
+      --da-badge-text:  #b32424;
+    }
+
+    /* ── Variabel warna: dark mode ── */
+    @media (prefers-color-scheme: dark) {
+      .da-overlay, .da-dialog, .da-dialog * {
+        --da-bg:          #1e1e1e;
+        --da-bg-subtle:   #2a2a2a;
+        --da-bg-hover:    #333333;
+        --da-border:      #54595d;
+        --da-border-subtle: #3a3a3a;
+        --da-text:        #eaecf0;
+        --da-text-subtle: #a2a9b1;
+        --da-text-muted:  #72777d;
+        --da-link:        #6699ff;
+        --da-badge-bg:    #4a1a1a;
+        --da-badge-text:  #ff8080;
+      }
+    }
+
     .da-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.40);
+      background: rgba(0,0,0,0.50);
       z-index: 100000;
       display: flex;
       align-items: center;
@@ -48,20 +80,22 @@
       animation: da-fadein .15s ease-out;
     }
     .da-dialog {
-      background: #fff;
-      border: 1px solid #a2a9b1;
+      background: var(--da-bg);
+      color: var(--da-text);
+      border: 1px solid var(--da-border);
       border-radius: 8px;
       width: min(680px, 96%);
       max-height: 88vh;
       overflow: auto;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.30);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.40);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
       animation: da-slidein .15s ease-out;
     }
     .da-dialog-header {
       padding: 12px 16px;
-      border-bottom: 1px solid #eaecf0;
-      background: #f8f9fa;
+      border-bottom: 1px solid var(--da-border-subtle);
+      background: var(--da-bg-subtle);
+      color: var(--da-text);
       font-weight: bold;
       font-size: 1.05em;
       display: flex;
@@ -71,11 +105,12 @@
     .da-dialog-body {
       padding: 14px 16px;
       font-size: 0.95em;
+      color: var(--da-text);
     }
     .da-dialog-footer {
       padding: 10px 16px;
-      border-top: 1px solid #eaecf0;
-      background: #f8f9fa;
+      border-top: 1px solid var(--da-border-subtle);
+      background: var(--da-bg-subtle);
       text-align: right;
     }
     .da-dialog-footer button {
@@ -87,7 +122,7 @@
       padding: 0;
       max-height: 340px;
       overflow-y: auto;
-      border: 1px solid #eaecf0;
+      border: 1px solid var(--da-border-subtle);
       border-radius: 4px;
     }
     .da-thread-item {
@@ -95,12 +130,12 @@
       align-items: flex-start;
       gap: 10px;
       padding: 9px 12px;
-      border-bottom: 1px solid #f0f2f4;
+      border-bottom: 1px solid var(--da-border-subtle);
       cursor: pointer;
       transition: background .1s;
     }
     .da-thread-item:last-child { border-bottom: none; }
-    .da-thread-item:hover { background: #f8f9fa; }
+    .da-thread-item:hover { background: var(--da-bg-hover); }
     .da-thread-item input[type=checkbox] {
       margin-top: 3px;
       flex-shrink: 0;
@@ -109,16 +144,17 @@
     .da-thread-title {
       font-weight: 600;
       font-size: 0.92em;
+      color: var(--da-text);
     }
     .da-thread-meta {
       font-size: 0.82em;
-      color: #72777d;
+      color: var(--da-text-muted);
       margin-top: 2px;
     }
     .da-badge {
       display: inline-block;
-      background: #fee7e6;
-      color: #b32424;
+      background: var(--da-badge-bg);
+      color: var(--da-badge-text);
       border-radius: 3px;
       padding: 1px 6px;
       font-size: 0.78em;
@@ -127,8 +163,8 @@
       vertical-align: middle;
     }
     .da-confirm-box {
-      background: #f8f9fa;
-      border: 1px solid #eaecf0;
+      background: var(--da-bg-subtle);
+      border: 1px solid var(--da-border-subtle);
       border-radius: 6px;
       padding: 10px 14px;
       margin-bottom: 10px;
@@ -136,27 +172,28 @@
     .da-confirm-box strong {
       display: block;
       margin-bottom: 4px;
+      color: var(--da-text);
     }
     .da-confirm-meta {
       font-size: 0.85em;
-      color: #54595d;
+      color: var(--da-text-subtle);
       margin: 4px 0 8px;
     }
     .da-archive-target {
       font-size: 0.88em;
-      color: #3366cc;
+      color: var(--da-link);
       word-break: break-all;
     }
     .da-progress {
       font-size: 0.9em;
-      color: #54595d;
+      color: var(--da-text-subtle);
       margin-top: 8px;
       min-height: 1.4em;
     }
     .da-empty {
       text-align: center;
       padding: 28px 0;
-      color: #72777d;
+      color: var(--da-text-muted);
       font-size: 0.93em;
     }
     .da-select-all-row {
@@ -164,10 +201,10 @@
       align-items: center;
       gap: 8px;
       padding: 7px 12px;
-      background: #f8f9fa;
-      border-bottom: 1px solid #eaecf0;
+      background: var(--da-bg-subtle);
+      border-bottom: 1px solid var(--da-border-subtle);
       font-size: 0.88em;
-      color: #54595d;
+      color: var(--da-text-subtle);
     }
     @keyframes da-fadein {
       from { opacity: 0; } to { opacity: 1; }
@@ -345,7 +382,7 @@
             </div>
             <div class="da-archive-target">→ Akan diarsipkan ke: <b>${mw.html.escape(archiveTitle)}</b></div>
           </div>
-          <p style="font-size:0.92em;color:#54595d;margin:6px 0 0">
+          <p style="font-size:0.92em;color:var(--da-text-subtle);margin:6px 0 0">
             Lewati untuk melewati utas ini tanpa mengarsipkan.
           </p>`
         );
@@ -507,7 +544,7 @@
           Klik <b>Lanjut</b> untuk mengkonfirmasi setiap utas satu per satu.
         </p>
         <ul class="da-thread-list">${listItems}</ul>
-        <p style="font-size:0.85em;color:#54595d;margin:6px 0 0">
+        <p style="font-size:0.85em;color:var(--da-text-subtle);margin:6px 0 0">
           → Arsip tujuan: <span class="da-archive-target">${mw.html.escape(archiveTitle)}</span>
         </p>`
       );
