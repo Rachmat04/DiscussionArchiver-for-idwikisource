@@ -34,44 +34,89 @@
   const excludedPatterns = ['/Arsip/', '/Arsip'];
   if (excludedPatterns.some(p => page.includes(p))) return;
 
-  // ── CSS ──────────────────────────────────────────────────────────────
+  // ── CSS ───────────────────────────────────────────────────────────────
+  //
+  // Strategi dark mode yang benar untuk Vector 2022 & Minerva:
+  //   1. Default (light): variabel --da-* didefinisikan di .da-dialog
+  //   2. Night mode paksa : html.skin-theme-clientpref-night .da-dialog
+  //   3. Night mode otomatis (ikut OS): @media (prefers-color-scheme:dark)
+  //                                     html.skin-theme-clientpref-os .da-dialog
+  //
+  // Token Codex yang benar (MediaWiki 1.42+):
+  //   --background-color-base       → latar konten utama
+  //   --background-color-neutral    → latar header/footer/box
+  //   --background-color-neutral-subtle → latar hover ringan
+  //   --color-base                  → teks utama
+  //   --color-subtle                → teks sekunder
+  //   --color-placeholder           → teks muted/placeholder
+  //   --color-progressive           → biru aksi utama (#36c)
+  //   --color-progressive--hover    → biru hover
+  //   --color-destructive           → merah (#b32424)
+  //   --border-color-base           → border standar
+  //   --border-color-subtle         → border ringan
+
   mw.util.addCSS(`
-    /* ── Variabel warna: light mode (default) ── */
-    .da-overlay, .da-dialog, .da-dialog * {
-      --da-bg:          #ffffff;
-      --da-bg-subtle:   #f8f9fa;
-      --da-bg-hover:    #f0f2f4;
-      --da-border:      #a2a9b1;
-      --da-border-subtle: #eaecf0;
-      --da-text:        #202122;
-      --da-text-subtle: #54595d;
-      --da-text-muted:  #72777d;
-      --da-link:        #3366cc;
-      --da-badge-bg:    #fee7e6;
-      --da-badge-text:  #b32424;
+    /* ── Variabel lokal: light mode (default) ── */
+    .da-dialog {
+      --da-bg:        #ffffff;
+      --da-bg-sub:    #f8f9fa;
+      --da-bg-hover:  #eaecf0;
+      --da-border:    #a2a9b1;
+      --da-border-s:  #eaecf0;
+      --da-text:      #202122;
+      --da-text-s:    #54595d;
+      --da-text-m:    #72777d;
+      --da-link:      #3366cc;
+      --da-prog:      #3366cc;
+      --da-prog-h:    #2a4b8d;
+      --da-dest:      #b32424;
+      --da-badge-bg:  #fee7e6;
+      --da-badge-c:   #b32424;
     }
 
-    /* ── Variabel warna: dark mode ── */
-    @media (prefers-color-scheme: dark) {
-      .da-overlay, .da-dialog, .da-dialog * {
-        --da-bg:          #1e1e1e;
-        --da-bg-subtle:   #2a2a2a;
-        --da-bg-hover:    #333333;
-        --da-border:      #54595d;
-        --da-border-subtle: #3a3a3a;
-        --da-text:        #eaecf0;
-        --da-text-subtle: #a2a9b1;
-        --da-text-muted:  #72777d;
-        --da-link:        #6699ff;
-        --da-badge-bg:    #4a1a1a;
-        --da-badge-text:  #ff8080;
+    /* ── Night mode paksa (Vector 2022 / Minerva) ── */
+    html.skin-theme-clientpref-night .da-dialog {
+      --da-bg:        #101418;
+      --da-bg-sub:    #1e2328;
+      --da-bg-hover:  #2a3038;
+      --da-border:    #54595d;
+      --da-border-s:  #2e3136;
+      --da-text:      #eaecf0;
+      --da-text-s:    #a2a9b1;
+      --da-text-m:    #72777d;
+      --da-link:      #6699ff;
+      --da-prog:      #6699ff;
+      --da-prog-h:    #4477ee;
+      --da-dest:      #ff8080;
+      --da-badge-bg:  #3a1010;
+      --da-badge-c:   #ff8080;
+    }
+
+    /* ── Night mode otomatis (ikut OS, skin-theme-clientpref-os) ── */
+    @media screen and (prefers-color-scheme: dark) {
+      html.skin-theme-clientpref-os .da-dialog {
+        --da-bg:        #101418;
+        --da-bg-sub:    #1e2328;
+        --da-bg-hover:  #2a3038;
+        --da-border:    #54595d;
+        --da-border-s:  #2e3136;
+        --da-text:      #eaecf0;
+        --da-text-s:    #a2a9b1;
+        --da-text-m:    #72777d;
+        --da-link:      #6699ff;
+        --da-prog:      #6699ff;
+        --da-prog-h:    #4477ee;
+        --da-dest:      #ff8080;
+        --da-badge-bg:  #3a1010;
+        --da-badge-c:   #ff8080;
       }
     }
 
+    /* ── Overlay ── */
     .da-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.50);
+      background: rgba(0,0,0,0.55);
       z-index: 100000;
       display: flex;
       align-items: center;
@@ -79,95 +124,180 @@
       padding: 12px;
       animation: da-fadein .15s ease-out;
     }
+
+    /* ── Dialog shell ── */
     .da-dialog {
       background: var(--da-bg);
       color: var(--da-text);
       border: 1px solid var(--da-border);
-      border-radius: 8px;
+      border-radius: 2px;
       width: min(680px, 96%);
       max-height: 88vh;
-      overflow: auto;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.40);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.40);
+      font-family: var(--font-family-base, system-ui, -apple-system, sans-serif);
+      font-size: 0.9375em;
       animation: da-slidein .15s ease-out;
     }
+
+    /* ── Header ── */
     .da-dialog-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--da-border-subtle);
-      background: var(--da-bg-subtle);
-      color: var(--da-text);
-      font-weight: bold;
-      font-size: 1.05em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--da-border-s);
+      background: var(--da-bg-sub);
+      font-weight: 700;
+      font-size: 1em;
+      flex-shrink: 0;
+    }
+    .da-dialog-header-title {
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-    .da-dialog-body {
-      padding: 14px 16px;
-      font-size: 0.95em;
       color: var(--da-text);
     }
+    .da-dialog-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--da-text-s);
+      font-size: 1.2em;
+      line-height: 1;
+      padding: 2px 5px;
+      border-radius: 2px;
+      transition: background 0.1s, color 0.1s;
+    }
+    .da-dialog-close:hover {
+      background: var(--da-bg-hover);
+      color: var(--da-text);
+    }
+
+    /* ── Body ── */
+    .da-dialog-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+      color: var(--da-text);
+      line-height: 1.6;
+    }
+
+    /* ── Footer ── */
     .da-dialog-footer {
-      padding: 10px 16px;
-      border-top: 1px solid var(--da-border-subtle);
-      background: var(--da-bg-subtle);
-      text-align: right;
+      padding: 12px 20px;
+      border-top: 1px solid var(--da-border-s);
+      background: var(--da-bg-sub);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
     }
-    .da-dialog-footer button {
-      margin-left: 6px;
+
+    /* ── Tombol ── */
+    .da-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 2px;
+      font-size: 0.875em;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+      white-space: nowrap;
     }
+    .da-btn:focus-visible {
+      outline: 2px solid var(--da-prog);
+      outline-offset: 2px;
+    }
+    .da-btn-normal {
+      background: var(--da-bg);
+      color: var(--da-text);
+      border-color: var(--da-border);
+    }
+    .da-btn-normal:hover {
+      background: var(--da-bg-hover);
+      border-color: var(--da-text-s);
+    }
+    .da-btn-progressive {
+      background: var(--da-prog);
+      color: #fff;
+      border-color: var(--da-prog);
+    }
+    .da-btn-progressive:hover {
+      background: var(--da-prog-h);
+      border-color: var(--da-prog-h);
+    }
+    .da-btn-destructive {
+      background: var(--da-bg);
+      color: var(--da-dest);
+      border-color: var(--da-dest);
+    }
+    .da-btn-destructive:hover {
+      background: var(--da-dest);
+      color: #fff;
+    }
+
+    /* ── Daftar utas ── */
     .da-thread-list {
       list-style: none;
-      margin: 10px 0;
+      margin: 12px 0;
       padding: 0;
-      max-height: 340px;
+      max-height: 320px;
       overflow-y: auto;
-      border: 1px solid var(--da-border-subtle);
-      border-radius: 4px;
+      border: 1px solid var(--da-border-s);
+      border-radius: 2px;
     }
     .da-thread-item {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      padding: 9px 12px;
-      border-bottom: 1px solid var(--da-border-subtle);
-      cursor: pointer;
-      transition: background .1s;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--da-border-s);
+      transition: background 0.1s;
     }
     .da-thread-item:last-child { border-bottom: none; }
     .da-thread-item:hover { background: var(--da-bg-hover); }
-    .da-thread-item input[type=checkbox] {
-      margin-top: 3px;
-      flex-shrink: 0;
-      cursor: pointer;
-    }
     .da-thread-title {
-      font-weight: 600;
-      font-size: 0.92em;
+      font-weight: 700;
+      font-size: 0.93em;
       color: var(--da-text);
     }
     .da-thread-meta {
       font-size: 0.82em;
-      color: var(--da-text-muted);
-      margin-top: 2px;
+      color: var(--da-text-s);
+      margin-top: 3px;
     }
+
+    /* ── Badge ── */
     .da-badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       background: var(--da-badge-bg);
-      color: var(--da-badge-text);
-      border-radius: 3px;
+      color: var(--da-badge-c);
+      border-radius: 2px;
       padding: 1px 6px;
-      font-size: 0.78em;
+      font-size: 0.76em;
       font-weight: 700;
       margin-left: 6px;
       vertical-align: middle;
     }
+
+    /* ── Kotak konfirmasi ── */
     .da-confirm-box {
-      background: var(--da-bg-subtle);
-      border: 1px solid var(--da-border-subtle);
-      border-radius: 6px;
-      padding: 10px 14px;
-      margin-bottom: 10px;
+      background: var(--da-bg-sub);
+      border: 1px solid var(--da-border-s);
+      border-left: 3px solid var(--da-prog);
+      border-radius: 2px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
     }
     .da-confirm-box strong {
       display: block;
@@ -176,60 +306,82 @@
     }
     .da-confirm-meta {
       font-size: 0.85em;
-      color: var(--da-text-subtle);
+      color: var(--da-text-s);
       margin: 4px 0 8px;
     }
     .da-archive-target {
-      font-size: 0.88em;
+      font-size: 0.86em;
       color: var(--da-link);
       word-break: break-all;
     }
+
+    /* ── Progress & kosong ── */
     .da-progress {
-      font-size: 0.9em;
-      color: var(--da-text-subtle);
+      font-size: 0.92em;
+      color: var(--da-text-s);
       margin-top: 8px;
-      min-height: 1.4em;
+      min-height: 1.5em;
+      line-height: 1.6;
     }
     .da-empty {
       text-align: center;
-      padding: 28px 0;
-      color: var(--da-text-muted);
+      padding: 32px 0;
+      color: var(--da-text-m);
       font-size: 0.93em;
     }
-    .da-select-all-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      background: var(--da-bg-subtle);
-      border-bottom: 1px solid var(--da-border-subtle);
-      font-size: 0.88em;
-      color: var(--da-text-subtle);
+    .da-empty-icon {
+      font-size: 2em;
+      display: block;
+      margin-bottom: 8px;
     }
+    .da-hint {
+      font-size: 0.84em;
+      color: var(--da-text-s);
+      margin: 8px 0 0;
+    }
+    .da-archive-label {
+      font-size: 0.86em;
+      color: var(--da-link);
+      word-break: break-all;
+    }
+
+    /* ── Animasi ── */
     @keyframes da-fadein {
       from { opacity: 0; } to { opacity: 1; }
     }
     @keyframes da-slidein {
-      from { opacity: 0; transform: translateY(-8px); }
+      from { opacity: 0; transform: translateY(-6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+
+    /* ── Tombol mengambang ── */
     #da-float-btn {
       position: fixed;
       bottom: 130px;
       right: 25px;
-      background: #36c;
+      background: #3366cc;
       color: #fff;
       border: none;
-      padding: 8px 13px;
-      border-radius: 5px;
+      padding: 8px 14px;
+      border-radius: 2px;
       cursor: pointer;
       z-index: 99999;
-      font-weight: bold;
-      font-size: 0.93em;
+      font-weight: 700;
+      font-size: 0.875em;
+      font-family: inherit;
       box-shadow: 0 2px 8px rgba(0,0,0,0.22);
-      transition: background .15s;
+      transition: background 0.15s, box-shadow 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    #da-float-btn:hover { background: #2a55a8; }
+    #da-float-btn:hover {
+      background: #2a4b8d;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.30);
+    }
+    #da-float-btn:active {
+      background: #2a4b8d;
+    }
   `);
 
   // ── Utilitas ──────────────────────────────────────────────────────────
@@ -297,12 +449,18 @@
     overlay.className = 'da-overlay';
     const dialog = document.createElement('div');
     dialog.className = 'da-dialog';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
     dialog.innerHTML = `
-      <div class="da-dialog-header">📦 ${titleHtml}</div>
+      <div class="da-dialog-header">
+        <div class="da-dialog-header-title">${titleHtml}</div>
+        <button class="da-dialog-close" aria-label="Tutup">✕</button>
+      </div>
       <div class="da-dialog-body">${bodyHtml}</div>
       <div class="da-dialog-footer"></div>
     `;
     overlay.appendChild(dialog);
+    dialog.querySelector('.da-dialog-close').addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     document.body.appendChild(overlay);
     return {
@@ -313,9 +471,14 @@
     };
   }
 
-  function addBtn(footer, label, cls, onClick) {
+  function addBtn(footer, label, type, onClick) {
+    const typeClass = {
+      'mw-ui-progressive': 'da-btn-progressive',
+      'mw-ui-destructive':  'da-btn-destructive',
+      'mw-ui-quiet':        'da-btn-normal'
+    }[type] || 'da-btn-normal';
     const btn = document.createElement('button');
-    btn.className = `mw-ui-button ${cls}`;
+    btn.className = 'da-btn ' + typeClass;
     btn.textContent = label;
     btn.addEventListener('click', onClick);
     footer.appendChild(btn);
@@ -356,10 +519,11 @@
    * Menjalankan dialog konfirmasi per utas, satu per satu.
    * Mengembalikan Promise yang resolve ke array utas yang disetujui.
    */
-  function confirmPerThread(threads, archiveTitle) {
+  function confirmPerThread(threads) {
     return new Promise(resolve => {
       const approved = [];
       let idx = 0;
+      const sourceTitle = page.replace(/_/g, ' ');
 
       function showNext() {
         if (idx >= threads.length) {
@@ -371,6 +535,8 @@
         const ts = getLatestTimestamp(t.content);
         const usia = ts ? selisihBulan(ts, new Date()) : '?';
         const tsTxt = ts ? formatTanggal(ts) : 'Tidak terdeteksi';
+        const year = ts ? ts.getUTCFullYear() : new Date().getFullYear();
+        const archiveTitle = `${sourceTitle}/Arsip ${year}`;
 
         const { overlay, footer } = createDialog(
           `Konfirmasi Arsip Utas (${idx + 1}/${threads.length})`,
@@ -382,7 +548,7 @@
             </div>
             <div class="da-archive-target">→ Akan diarsipkan ke: <b>${mw.html.escape(archiveTitle)}</b></div>
           </div>
-          <p style="font-size:0.92em;color:var(--da-text-subtle);margin:6px 0 0">
+          <p class="da-hint">
             Lewati untuk melewati utas ini tanpa mengarsipkan.
           </p>`
         );
@@ -405,9 +571,12 @@
   }
 
   /**
-   * Proses pengarsipan: hapus utas dari halaman asal, tambahkan ke halaman arsip.
+   * Proses pengarsipan: hapus utas dari halaman asal,
+   * kelompokkan per tahun timestamp, lalu tambahkan ke halaman arsip masing-masing.
+   * @param {Array} threadsToArchive
+   * @returns {Object} { archivedCount, archiveTitles }
    */
-  async function doArchive(threadsToArchive, archiveTitle) {
+  async function doArchive(threadsToArchive) {
     // Ambil ulang wikitext terbaru (hindari konflik edit)
     const res = await api.get({
       action: 'query',
@@ -420,51 +589,67 @@
     let text = pageData.revisions[0].content;
     const baseTimestamp = pageData.revisions[0].timestamp;
 
-    // Hapus setiap utas dari teks asal (cocokkan berdasarkan konten)
+    // Hapus setiap utas dari teks asal
     for (const t of threadsToArchive) {
-      // Escape agar aman dipakai di regex
       const escaped = t.content.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const re = new RegExp(escaped);
-      text = text.replace(re, '');
+      text = text.replace(new RegExp(escaped), '');
     }
     text = text.replace(/\n{3,}/g, '\n\n').trim();
 
-    // Ambil atau buat halaman arsip
-    const arsRes = await api.get({
-      action: 'query',
-      prop: 'revisions',
-      rvprop: 'content',
-      titles: archiveTitle,
-      formatversion: 2
-    });
-    const arsPage = arsRes.query.pages[0];
-    let arsText = (arsPage.revisions && arsPage.revisions[0].content) || '';
-
-    if (!arsPage.revisions) {
-      // Buat header halaman arsip baru
-      const sourceTitle = page.replace(/_/g, ' ');
-      arsText = `{{Arsip|${sourceTitle}}}\n__ARCHIVEDTALK__\n__NOINDEX__\n`;
+    // Kelompokkan utas berdasarkan tahun timestamp terakhirnya
+    const byYear = {};
+    for (const t of threadsToArchive) {
+      const ts = getLatestTimestamp(t.content);
+      const year = ts ? ts.getUTCFullYear() : new Date().getFullYear();
+      if (!byYear[year]) byYear[year] = [];
+      byYear[year].push(t);
     }
 
-    const newBlocks = threadsToArchive.map(t => t.content.trim()).join('\n\n');
-    arsText = `${arsText.trim()}\n\n${newBlocks}\n`;
+    const sourceTitle = page.replace(/_/g, ' ');
+    const archiveTitles = [];
 
-    // Simpan halaman asal
+    // Simpan ke halaman arsip per tahun
+    for (const year of Object.keys(byYear).sort()) {
+      const threads = byYear[year];
+      const archiveTitle = `${sourceTitle}/Arsip ${year}`;
+      archiveTitles.push(archiveTitle);
+
+      const arsRes = await api.get({
+        action: 'query',
+        prop: 'revisions',
+        rvprop: 'content',
+        titles: archiveTitle,
+        formatversion: 2
+      });
+      const arsPage = arsRes.query.pages[0];
+      let arsText = (arsPage.revisions && arsPage.revisions[0].content) || '';
+
+      if (!arsPage.revisions) {
+        arsText = `{{Arsip|${sourceTitle}}}\n__ARCHIVEDTALK__\n__NOINDEX__\n`;
+      }
+
+      const newBlocks = threads.map(t => t.content.trim()).join('\n\n');
+      arsText = `${arsText.trim()}\n\n${newBlocks}\n`;
+
+      await api.postWithToken('csrf', {
+        action: 'edit',
+        title: archiveTitle,
+        text: arsText.trim(),
+        summary: `Menambahkan ${threads.length} utas dari [[${sourceTitle}]]`
+      });
+    }
+
+    // Simpan halaman asal (sekali saja, setelah semua arsip selesai)
+    const archiveList = archiveTitles.map(t => `[[${t}]]`).join(', ');
     await api.postWithToken('csrf', {
       action: 'edit',
       title: page,
       text,
-      summary: `Mengarsipkan ${threadsToArchive.length} utas tidak aktif ke [[${archiveTitle}]]`,
+      summary: `Mengarsipkan ${threadsToArchive.length} utas tidak aktif ke ${archiveList}`,
       basetimestamp: baseTimestamp
     });
 
-    // Simpan halaman arsip
-    await api.postWithToken('csrf', {
-      action: 'edit',
-      title: archiveTitle,
-      text: arsText.trim(),
-      summary: `Menambahkan ${threadsToArchive.length} utas diarsipkan dari [[${page.replace(/_/g, ' ')}]]`
-    });
+    return { archivedCount: threadsToArchive.length, archiveTitles };
   }
 
   // ── Alur utama ────────────────────────────────────────────────────────
@@ -511,7 +696,8 @@
       const { overlay, footer } = createDialog(
         'Pengarsip Diskusi — Tidak Ada Utas Kedaluwarsa',
         `<div class="da-empty">
-          ✅ Semua utas masih aktif (komentar terakhir &lt; 2 bulan).<br>
+          <span class="da-empty-icon">✅</span>
+          Semua utas masih aktif (komentar terakhir &lt; 2 bulan).<br>
           Tidak ada yang perlu diarsipkan saat ini.
         </div>`
       );
@@ -519,9 +705,13 @@
       return;
     }
 
-    // 4. Tentukan judul halaman arsip berdasarkan tahun sekarang
-    const year = now.getFullYear();
-    const archiveTitle = `${page.replace(/_/g, ' ')}/Arsip ${year}`;
+    // 4. Tentukan arsip tujuan per utas (berdasarkan tahun timestamp)
+    const sourceTitle = page.replace(/_/g, ' ');
+    const getArchiveTitle = t => {
+      const ts = getLatestTimestamp(t.content);
+      const year = ts ? ts.getUTCFullYear() : now.getFullYear();
+      return `${sourceTitle}/Arsip ${year}`;
+    };
 
     // 5. Tampilkan ringkasan dulu sebelum konfirmasi per utas
     await new Promise(resolve => {
@@ -529,24 +719,25 @@
         const ts = getLatestTimestamp(t.content);
         const usia = ts ? selisihBulan(ts, now) : '?';
         const tsTxt = ts ? formatTanggal(ts) : '—';
+        const archiveTitle = getArchiveTitle(t);
         return `<li class="da-thread-item" style="cursor:default">
           <div>
             <div class="da-thread-title">${mw.html.escape(t.title)}</div>
-            <div class="da-thread-meta">Komentar terakhir: ${tsTxt} <span class="da-badge">~${usia} bln</span></div>
+            <div class="da-thread-meta">
+              Komentar terakhir: ${tsTxt} <span class="da-badge">~${usia} bln</span><br>
+              <span style="color:var(--da-link)">→ ${mw.html.escape(archiveTitle)}</span>
+            </div>
           </div>
         </li>`;
       }).join('');
 
       const { overlay, footer } = createDialog(
         `Pengarsip Diskusi — ${staleThreads.length} Utas Tidak Aktif`,
-        `<p style="margin:0 0 8px;font-size:0.93em">
+        `<p style="margin:0 0 8px;font-size:0.93em;color:var(--da-text,#202122)">
           Utas berikut memiliki komentar terakhir <b>≥ 2 bulan</b> yang lalu.
           Klik <b>Lanjut</b> untuk mengkonfirmasi setiap utas satu per satu.
         </p>
-        <ul class="da-thread-list">${listItems}</ul>
-        <p style="font-size:0.85em;color:var(--da-text-subtle);margin:6px 0 0">
-          → Arsip tujuan: <span class="da-archive-target">${mw.html.escape(archiveTitle)}</span>
-        </p>`
+        <ul class="da-thread-list">${listItems}</ul>`
       );
 
       addBtn(footer, 'Batal', 'mw-ui-destructive', () => { overlay.remove(); resolve('cancel'); });
@@ -555,7 +746,7 @@
       if (result === 'cancel') return;
 
       // 6. Konfirmasi per utas
-      const approved = await confirmPerThread(staleThreads, archiveTitle);
+      const approved = await confirmPerThread(staleThreads);
 
       if (!approved.length) {
         notify('ℹ️ Tidak ada utas yang dipilih untuk diarsipkan.', 'info');
@@ -563,7 +754,7 @@
       }
 
       // 7. Dialog progres + eksekusi
-      const { overlay, body, footer } = createDialog(
+      const { overlay, footer } = createDialog(
         `Mengarsipkan ${approved.length} Utas…`,
         `<div class="da-progress" id="da-prog-msg">⏳ Memproses…</div>`
       );
@@ -571,9 +762,12 @@
       const progMsg = document.getElementById('da-prog-msg');
 
       try {
-        progMsg.textContent = `⏳ Menyimpan perubahan ke ${page.replace(/_/g, ' ')} dan ${archiveTitle}…`;
-        await doArchive(approved, archiveTitle);
-        progMsg.innerHTML = `✅ <b>${approved.length} utas</b> berhasil diarsipkan ke <a href="/wiki/${encodeURIComponent(archiveTitle)}" target="_blank">${mw.html.escape(archiveTitle)}</a>.`;
+        progMsg.textContent = '⏳ Menyimpan ke halaman arsip…';
+        const { archivedCount, archiveTitles } = await doArchive(approved);
+        const links = archiveTitles.map(t =>
+          `<a href="/wiki/${encodeURIComponent(t.replace(/ /g, '_'))}" target="_blank">${mw.html.escape(t)}</a>`
+        ).join(', ');
+        progMsg.innerHTML = `✅ <b>${archivedCount} utas</b> berhasil diarsipkan ke: ${links}.`;
         addBtn(footer, 'Tutup & Muat Ulang', 'mw-ui-progressive', () => {
           overlay.remove();
           location.reload();
