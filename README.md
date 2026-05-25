@@ -1,5 +1,3 @@
-## README.md
-
 # DiscussionArchiver.js — Wikisource Discussion Archiver
 
 ## Overview
