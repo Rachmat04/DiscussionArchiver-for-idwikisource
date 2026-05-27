@@ -3,7 +3,7 @@
  *
  * •==============================================•
  * > Type  : JavaScript (MediaWiki Gadget — shared core)
- * > Version : 3.0.0
+ * > Version : 3.1.0
  * > Function: Shared logic for archiving inactive
  * discussion threads with bulk selection.
  * •==============================================•
@@ -219,31 +219,6 @@
     }
     .da-archive-label { font-size: 12px; color: var(--cdx-color-progressive); margin-top: 2px; }
     .da-progress, .da-empty { text-align: center; padding: 24px 0; color: var(--cdx-color-subtle); }
-
-    /* ── Floating Action Button (Round Emoji) ── */
-    #da-float-btn {
-      position: fixed;
-      bottom: 35px;
-      right: 35px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #3366cc;
-      color: #ffffff;
-      border: none;
-      cursor: pointer;
-      z-index: 99999;
-      font-size: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,.25);
-      transition: transform 100ms, background-color 100ms;
-    }
-    #da-float-btn:hover {
-      background: #2a4b8d;
-      transform: scale(1.05);
-    }
 
     @keyframes da-fadein { from { opacity: 0; } to { opacity: 1; } }
     @keyframes da-slidein { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
@@ -636,13 +611,22 @@
     )
       return;
 
-    // Mount floating UI trigger (Round Emoji)
-    const floatBtn = document.createElement("button");
-    floatBtn.id = "da-float-btn";
-    floatBtn.textContent = "📦";
-    floatBtn.title = cfg.floatBtnTitle || "Arsipkan diskusi tidak aktif";
-    floatBtn.addEventListener("click", () => runArchiver(cfg, api, page));
-    document.body.appendChild(floatBtn);
+    // Menambahkan tautan di menu dropdown p-cactions (Menu "Lainnya")
+    const portletText = cfg.portletText || "📦 Arsipkan diskusi";
+    const portletLink = mw.util.addPortletLink(
+      "p-cactions",
+      "#",
+      portletText,
+      "ca-discussion-archiver",
+      "Buka alat pengarsip diskusi",
+    );
+
+    if (portletLink) {
+      $(portletLink).on("click", function (e) {
+        e.preventDefault();
+        runArchiver(cfg, api, page);
+      });
+    }
   }
 
   window.DiscussionArchiverCore = { init };

@@ -34,18 +34,16 @@
   };
 
   window.DiscussionArchiverCore.init({
-    // Only activate in Wikisource namespace (4) and avoid archive pages
+    // Hanya izinkan alat ini dimuat pada halaman khusus Warung kopi
     isAllowedPage: function (mwCfg) {
-      if (mwCfg.wgNamespaceNumber !== 4) return false;
-      if (mwCfg.wgPageName.includes("/Arsip")) return false;
-      return true;
+      return mwCfg.wgPageName === "Wikisumber:Warung_kopi";
     },
 
     // Minimum inactive days required for a thread to be archived (7 days)
     staleDays: 7,
 
-    // Tooltip label for the floating emoji button
-    floatBtnTitle: "Arsipkan diskusi (≥ 7 hari)",
+    // Teks yang akan ditampilkan pada portlet link menu "Lainnya"
+    portletText: "📦 Arsipkan diskusi",
 
     // Parse the standard Indonesian Wikisource timestamp format
     getLatestTimestamp: function (text) {
